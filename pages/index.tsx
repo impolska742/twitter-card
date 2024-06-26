@@ -33,7 +33,11 @@ const Home: NextPage = () => {
       >
         <ConnectButton />
 
-        <p>
+        <p
+          style={{
+            color: "white",
+          }}
+        >
           {isConnected && address ? `Connected: ${address}` : "Disconnected"}
         </p>
       </main>
