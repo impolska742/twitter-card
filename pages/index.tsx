@@ -30,6 +30,8 @@ const Home: NextPage = () => {
   ]);
   const [hydrated, setHydrated] = useState(false);
 
+  console.log({ signer });
+
   useEffect(() => {
     setHydrated(true);
   }, []);
