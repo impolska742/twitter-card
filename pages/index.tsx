@@ -53,6 +53,10 @@ const Home: NextPage = () => {
         )
       : false;
 
+  if (!hydrated) {
+    return null;
+  }
+
   if ((loading || waitingSignature || !auth) && isConnected) {
     if (!signer) {
       return (
@@ -71,10 +75,6 @@ const Home: NextPage = () => {
     return (
       <button onClick={() => fetchAuthSignature(signer)}>Sign a message</button>
     );
-  }
-
-  if (!hydrated) {
-    return null;
   }
 
   return (
@@ -106,14 +106,11 @@ const Home: NextPage = () => {
             : "False"}
         </p>
 
-        {address &&
-          !doesConsoleExistOnBase &&
-          !consoles.loading &&
-          consoles.organizations.length > 0 && (
-            <button onClick={() => handleDeployNewConsoleOnBase(address)}>
-              {loading ? "Loading ..." : "Deploy Console on Base"}
-            </button>
-          )}
+        {address && !doesConsoleExistOnBase && !consoles.loading && (
+          <button onClick={() => handleDeployNewConsoleOnBase(address)}>
+            {loading ? "Loading ..." : "Deploy Console on Base"}
+          </button>
+        )}
 
         <p>
           {isConnected && address ? `Connected: ${address}` : "Disconnected"}
