@@ -30,8 +30,6 @@ const Home: NextPage = () => {
   ]);
   const [hydrated, setHydrated] = useState(false);
 
-  console.log({ signer });
-
   useEffect(() => {
     setHydrated(true);
   }, []);
@@ -55,7 +53,7 @@ const Home: NextPage = () => {
         )
       : false;
 
-  if (loading || waitingSignature || !auth) {
+  if ((loading || waitingSignature || !auth) && isConnected) {
     if (!signer) {
       return (
         <button
