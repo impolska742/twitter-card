@@ -1,9 +1,6 @@
 import { Chain } from "@rainbow-me/rainbowkit";
 
-export const BASE_RPC =
-  process.env.NODE_ENV === "production"
-    ? "https://base-mainnet.blastapi.io/a576df6e-da85-4074-9a31-e3d8ea4f761d"
-    : "https://base.llamarpc.com";
+export const BASE_RPC = "https://base.llamarpc.com";
 
 const baseMainnet = {
   id: 8453,
