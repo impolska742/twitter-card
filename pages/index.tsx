@@ -1,20 +1,84 @@
-import Head from "next/head";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import type { NextPage } from "next";
-import { useAccount } from "wagmi";
+import Head from "next/head";
+import { useEffect, useState } from "react";
+import { useAccount, useSigner } from "wagmi";
+import useAuthStore from "../store/auth";
+import { BASE_MAINNET_CHAIN_ID } from "../utils";
 
 const Home: NextPage = () => {
   const { address, isConnected } = useAccount();
+  const { data: signer } = useSigner();
+  const [
+    consoles,
+    auth,
+    loading,
+    waitingSignature,
+    checkAuthToken,
+    fetchAuthSignature,
+    fetchEOAConsoles,
+    handleDeployNewConsoleOnBase,
+  ] = useAuthStore((store) => [
+    store.consoles,
+    store.auth,
+    store.loading,
+    store.waitingSignature,
+    store.checkAuthToken,
+    store.fetchAuthSignature,
+    store.fetchEOAConsoles,
+    store.handleDeployNewConsoleOnBase,
+  ]);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!signer) return;
+    checkAuthToken(signer);
+  }, [checkAuthToken, signer]);
+
+  useEffect(() => {
+    if (!address) return;
+    fetchEOAConsoles(address);
+  }, [address, auth, fetchEOAConsoles]);
+
+  const doesConsoleExistOnBase =
+    consoles.organizations.length > 0
+      ? consoles.organizations.some((console) =>
+          console.chainsOrgHasConsoles.some(
+            (chain) => chain === BASE_MAINNET_CHAIN_ID
+          )
+        )
+      : false;
+
+  if (loading || waitingSignature || !auth) {
+    if (!signer) {
+      return (
+        <button
+          onClick={async () => {
+            if (typeof window !== undefined) {
+              window.location.reload();
+            }
+          }}
+        >
+          Refresh
+        </button>
+      );
+    }
+
+    return (
+      <button onClick={() => fetchAuthSignature(signer)}>Sign a message</button>
+    );
+  }
+
+  if (!hydrated) {
+    return null;
+  }
+
   return (
-    <div
-      style={{
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        marginTop: "100px",
-      }}
-    >
+    <>
       <Head>
         <title>RainbowKit App</title>
         <meta
@@ -33,15 +97,29 @@ const Home: NextPage = () => {
       >
         <ConnectButton />
 
-        <p
-          style={{
-            color: "white",
-          }}
-        >
+        <p>
+          Console Exists on Base :{" "}
+          {consoles.loading
+            ? "Loading ..."
+            : doesConsoleExistOnBase
+            ? "True"
+            : "False"}
+        </p>
+
+        {address &&
+          !doesConsoleExistOnBase &&
+          !consoles.loading &&
+          consoles.organizations.length > 0 && (
+            <button onClick={() => handleDeployNewConsoleOnBase(address)}>
+              {loading ? "Loading ..." : "Deploy Console on Base"}
+            </button>
+          )}
+
+        <p>
           {isConnected && address ? `Connected: ${address}` : "Disconnected"}
         </p>
       </main>
-    </div>
+    </>
   );
 };
 
