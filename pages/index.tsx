@@ -53,7 +53,7 @@ const Home: NextPage = () => {
   useEffect(() => {
     if (!signer) return;
     checkAuthToken(signer);
-  }, [checkAuthToken, auth, signer]);
+  }, [checkAuthToken, signer]);
 
   useEffect(() => {
     if (!address || !auth) return;
