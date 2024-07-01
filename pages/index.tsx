@@ -101,7 +101,7 @@ const Home: NextPage = () => {
         <div
           style={{
             position: "absolute",
-            bottom: "250px",
+            bottom: "200px",
             right: "50%",
             transform: "translateX(50%)",
             display: "flex",

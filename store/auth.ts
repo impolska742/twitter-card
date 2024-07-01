@@ -263,7 +263,6 @@ const useAuthStore = create<AuthStore>((set, get) => ({
         userAddress,
         deployedConsoleAddress as Address
       );
-      await get().fetchEOAConsoles(userAddress);
       set({
         success: true,
         error: false,
@@ -287,6 +286,7 @@ const useAuthStore = create<AuthStore>((set, get) => ({
       const consoleExistsOnBase = await consoleApi.fetchDoesConsoleExists(
         userAddress
       );
+      console.log({ consoleExistsOnBase });
 
       set({ consoleExistsOnBase, loading: false });
     } catch (err: any) {
