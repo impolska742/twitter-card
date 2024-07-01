@@ -15,7 +15,8 @@ const ConsoleApiRoutes = {
     modes: "/auth/modes",
     access_key: "/auth/access_key",
   },
-  eoaConsoles: "/accounts/user/overview",
+  consoleExistsOnBase: "/v1/accounts/auth/eoaAddress",
+  eoaConsoles: "/accounts/auth",
   baseCampaign: "/campaign/create-console",
 } as const;
 
@@ -74,6 +75,17 @@ export default class ConsoleApi {
     } catch (err: any) {
       console.error(err?.message);
       return {};
+    }
+  }
+
+  async fetchDoesConsoleExists(userAddress: Address): Promise<boolean> {
+    try {
+      await this.api.get(`${this.routes.eoaConsoles}/${userAddress}`);
+
+      return true;
+    } catch (err: any) {
+      console.error(err?.message);
+      return false;
     }
   }
 

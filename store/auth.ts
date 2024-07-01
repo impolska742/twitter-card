@@ -23,6 +23,7 @@ type AuthStore = {
     loading: boolean;
     organizations: EOAOrganization[];
   };
+  consoleExistsOnBase: boolean;
   deployedConsoleAddress: Address;
   loading: boolean;
   success: boolean;
@@ -35,11 +36,13 @@ type AuthStore = {
   clearAuthStorage: () => void;
   fetchEOAConsoles: (userAddress: Address) => Promise<void>;
   handleDeployNewConsoleOnBase: (userAddress: Address) => Promise<void>;
+  fetchDoesConsoleExists: (userAddress: Address) => Promise<void>;
 };
 
 const useAuthStore = create<AuthStore>((set, get) => ({
   loading: true,
   success: false,
+  consoleExistsOnBase: false,
   error: false,
   deployedConsoleAddress: "" as Address,
   consoles: {
@@ -274,6 +277,21 @@ const useAuthStore = create<AuthStore>((set, get) => ({
         loading: false,
       });
       console.log(err);
+    }
+  },
+
+  fetchDoesConsoleExists: async (userAddress: Address) => {
+    try {
+      set({ consoleExistsOnBase: false, loading: true });
+
+      const consoleExistsOnBase = await consoleApi.fetchDoesConsoleExists(
+        userAddress
+      );
+
+      set({ consoleExistsOnBase, loading: false });
+    } catch (err: any) {
+      set({ consoleExistsOnBase: false, loading: false });
+      console.error("Error fetching user data", err);
     }
   },
 }));

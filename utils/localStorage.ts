@@ -55,7 +55,7 @@ const localStorageService = {
       const parsedDeployedConsoleAddresses = deployedConsoleAddresses
         ? JSON.parse(deployedConsoleAddresses)
         : {};
-      parsedDeployedConsoleAddresses[address] = consoleAddress;
+      parsedDeployedConsoleAddresses[address.toLowerCase()] = consoleAddress;
       localStorage.setItem(
         deployedConsoleAddressesKey,
         JSON.stringify(parsedDeployedConsoleAddresses)
@@ -72,7 +72,8 @@ const localStorageService = {
       const parsedDeployedConsoleAddresses = deployedConsoleAddresses
         ? JSON.parse(deployedConsoleAddresses)
         : {};
-      return parsedDeployedConsoleAddresses[address];
+      console.log({ parsedDeployedConsoleAddresses });
+      return parsedDeployedConsoleAddresses[address.toLowerCase()];
     }
   },
 };

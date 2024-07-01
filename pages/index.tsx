@@ -2,7 +2,7 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import type { NextPage } from "next";
 import Head from "next/head";
 import { useEffect, useState } from "react";
-import { useAccount, useSigner } from "wagmi";
+import { useAccount } from "wagmi";
 import useAuthStore from "../store/auth";
 import { BASE_MAINNET_CHAIN_ID } from "../utils";
 import Image from "next/image";
@@ -17,32 +17,23 @@ const OG_URL =
 
 const Home: NextPage = () => {
   const { address, isConnected } = useAccount();
-  const { data: signer } = useSigner();
   const { openConnectModal } = useConnectModal();
   const [
-    consoles,
-    auth,
     loading,
+    consoleExistsOnBase,
     deployedConsoleAddress,
     success,
     error,
-    waitingSignature,
-    checkAuthToken,
-    fetchAuthSignature,
-    fetchEOAConsoles,
     handleDeployNewConsoleOnBase,
+    fetchDoesConsoleExists,
   ] = useAuthStore((store) => [
-    store.consoles,
-    store.auth,
     store.loading,
+    store.consoleExistsOnBase,
     store.deployedConsoleAddress,
     store.success,
     store.error,
-    store.waitingSignature,
-    store.checkAuthToken,
-    store.fetchAuthSignature,
-    store.fetchEOAConsoles,
     store.handleDeployNewConsoleOnBase,
+    store.fetchDoesConsoleExists,
   ]);
   const [hydrated, setHydrated] = useState(false);
 
@@ -51,39 +42,16 @@ const Home: NextPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!signer) return;
-    checkAuthToken(signer);
-  }, [checkAuthToken, signer]);
-
-  useEffect(() => {
-    if (!address || !auth) return;
-    fetchEOAConsoles(address);
-  }, [address, auth, fetchEOAConsoles]);
+    if (!address) return;
+    fetchDoesConsoleExists(address);
+  }, [fetchDoesConsoleExists, address]);
 
   const deployedConsoleAddressFromLocalStorage = address
     ? localStorageService.getDeployedConsoleAddress(address)
     : undefined;
 
   const doesConsoleExistOnBase =
-    (consoles.organizations.length > 0
-      ? consoles.organizations.some((console) =>
-          console.chainsOrgHasConsoles.some(
-            (chain) => chain === BASE_MAINNET_CHAIN_ID
-          )
-        )
-      : false) || !!deployedConsoleAddressFromLocalStorage;
-
-  const firstConsoleAddressOnBase =
-    (consoles.organizations.length > 0
-      ? consoles.organizations.find((console) =>
-          console.chainsOrgHasConsoles.includes(BASE_MAINNET_CHAIN_ID)
-        )?.consoleAddress || null
-      : null) || deployedConsoleAddressFromLocalStorage;
-
-  const isAuthenticated = !!auth;
-
-  const isSignerNeeded =
-    (loading || waitingSignature || !auth) && isConnected && !signer;
+    consoleExistsOnBase || !!deployedConsoleAddressFromLocalStorage;
 
   if (!hydrated) {
     return null;
@@ -145,25 +113,7 @@ const Home: NextPage = () => {
             <button className="button" onClick={() => openConnectModal?.()}>
               Connect Wallet
             </button>
-          ) : isSignerNeeded ? (
-            <button
-              className="button"
-              onClick={async () => {
-                if (typeof window !== undefined) {
-                  window.location.reload();
-                }
-              }}
-            >
-              Refresh
-            </button>
-          ) : !isAuthenticated && signer ? (
-            <button
-              className="button"
-              onClick={() => fetchAuthSignature(signer)}
-            >
-              Sign a message
-            </button>
-          ) : loading || consoles.loading ? (
+          ) : loading ? (
             <div className="loader"></div>
           ) : !doesConsoleExistOnBase && !success && !error ? (
             <button
@@ -172,21 +122,23 @@ const Home: NextPage = () => {
             >
               Deploy Console on Base
             </button>
-          ) : firstConsoleAddressOnBase ? (
+          ) : success || deployedConsoleAddress ? (
             <Link
               className="button"
               target="_blank"
-              href={`https://console.brahma.fi/account/${firstConsoleAddressOnBase}?chainId=${BASE_MAINNET_CHAIN_ID}`}
+              href={`https://console.brahma.fi/account/${
+                deployedConsoleAddressFromLocalStorage || deployedConsoleAddress
+              }?chainId=${BASE_MAINNET_CHAIN_ID}`}
             >
               Redirect to Console
             </Link>
-          ) : success && deployedConsoleAddress ? (
+          ) : doesConsoleExistOnBase ? (
             <Link
               className="button"
               target="_blank"
-              href={`https://console.brahma.fi/account/${deployedConsoleAddress}?chainId=${BASE_MAINNET_CHAIN_ID}`}
+              href={`https://console.brahma.fi/account?chainId=${BASE_MAINNET_CHAIN_ID}`}
             >
-              Redirect to Console
+              Redirect to Brahma.Fi
             </Link>
           ) : (
             error && (
