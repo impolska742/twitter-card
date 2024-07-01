@@ -62,7 +62,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        marginTop: "100px",
+        position: "relative",
       }}
     >
       <WagmiConfig client={wagmiClient}>

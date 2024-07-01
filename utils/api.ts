@@ -77,13 +77,13 @@ export default class ConsoleApi {
     }
   }
 
-  async deployBaseConsole(userAddress: Address): Promise<Address> {
+  async deployBaseConsole(userAddress: Address): Promise<string> {
     try {
-      const response = await this.api.post(`${this.routes.baseCampaign}`, {
+      const response = await this.api.post(this.routes.baseCampaign, {
         eoa: userAddress,
       });
 
-      return response.data;
+      return response.data.txnHash;
     } catch (err: any) {
       console.error(err?.message);
       return "" as Address;

@@ -4,17 +4,14 @@ const storagePrefix = "brahma_twitter";
 
 const storageKeys = {
   auth: "auth",
-};
-
-export type ConnectDappsCacheData = {
-  timestamp: number;
-  connectDapps: string;
+  deployedConsoleAddresses: "deployedConsoleAddresses",
 };
 
 const localStorageService = {
   checkAuthToken: (address: Address): AuthData | null => {
     const authTokenKey = `${storagePrefix}_${storageKeys.auth}-${address}`;
     const authToken = localStorage.getItem(authTokenKey);
+    console.log({ authToken });
     const parsedAuthToken = authToken ? JSON.parse(authToken) : null;
 
     return parsedAuthToken;
@@ -43,6 +40,39 @@ const localStorageService = {
           localStorage.removeItem(key);
         }
       });
+    }
+  },
+
+  saveDeployedConsoleAddress: (
+    address: Address,
+    consoleAddress: Address
+  ): void => {
+    if (typeof window !== "undefined") {
+      const deployedConsoleAddressesKey = `${storagePrefix}_${storageKeys.deployedConsoleAddresses}`;
+      const deployedConsoleAddresses = localStorage.getItem(
+        deployedConsoleAddressesKey
+      );
+      const parsedDeployedConsoleAddresses = deployedConsoleAddresses
+        ? JSON.parse(deployedConsoleAddresses)
+        : {};
+      parsedDeployedConsoleAddresses[address] = consoleAddress;
+      localStorage.setItem(
+        deployedConsoleAddressesKey,
+        JSON.stringify(parsedDeployedConsoleAddresses)
+      );
+    }
+  },
+
+  getDeployedConsoleAddress: (address: Address): Address | undefined => {
+    if (typeof window !== "undefined") {
+      const deployedConsoleAddressesKey = `${storagePrefix}_${storageKeys.deployedConsoleAddresses}`;
+      const deployedConsoleAddresses = localStorage.getItem(
+        deployedConsoleAddressesKey
+      );
+      const parsedDeployedConsoleAddresses = deployedConsoleAddresses
+        ? JSON.parse(deployedConsoleAddresses)
+        : {};
+      return parsedDeployedConsoleAddresses[address];
     }
   },
 };

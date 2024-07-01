@@ -16,6 +16,33 @@ a {
   box-sizing: border-box;
 }
 
-p {
+.loader {
+  margin-top: 1rem;
+  width: 30px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 8px solid;
+  border-color: #000 #0000;
+  animation: l1 1s infinite;
+}
+
+@keyframes l1 {
+  to {
+    transform: rotate(0.5turn);
+  }
+}
+
+.button {
+  padding: 0.4rem 1rem;
+  background-color: rgb(37, 99, 235);
+  border-radius: 0.4rem;
+  transition: 0.1s ease-in-out all;
+  border: none;
+  cursor: pointer;
+  outline: none;
   color: white;
+}
+
+.button:hover {
+  background-color: rgb(59, 130, 246);
 }

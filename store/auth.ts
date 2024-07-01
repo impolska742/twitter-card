@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { signTypedData, getAccount, fetchSigner } from "@wagmi/core";
-import { Signer } from "ethers";
+import { Signer, providers, Contract } from "ethers";
+import safeDeployerAbi from "../abi/safe-deployer.json";
 
 import {
   Address,
@@ -15,13 +16,17 @@ import {
 import localStorageService from "../utils/localStorage";
 import { consoleApi } from "../pages/_app";
 import mapOrganizations from "../utils/mapOrganizations";
+import { BASE_RPC } from "../wagmiChains";
 
 type AuthStore = {
   consoles: {
     loading: boolean;
     organizations: EOAOrganization[];
   };
+  deployedConsoleAddress: Address;
   loading: boolean;
+  success: boolean;
+  error: boolean;
   waitingSignature: boolean;
   auth: AuthData | null;
   checkAuthToken: (signer: Signer) => Promise<void>;
@@ -34,6 +39,9 @@ type AuthStore = {
 
 const useAuthStore = create<AuthStore>((set, get) => ({
   loading: true,
+  success: false,
+  error: false,
+  deployedConsoleAddress: "" as Address,
   consoles: {
     loading: false,
     organizations: [],
@@ -71,6 +79,7 @@ const useAuthStore = create<AuthStore>((set, get) => ({
   fetchAuthSignature: async (signer?: Signer) => {
     try {
       if (get().waitingSignature) return;
+      console.log({ waitingSignature: get().waitingSignature });
       set({ waitingSignature: true });
       const selectedSigner = signer || (await fetchSigner());
       if (!selectedSigner) return;
@@ -107,6 +116,8 @@ const useAuthStore = create<AuthStore>((set, get) => ({
       set({ waitingSignature: false });
 
       const authData = await consoleApi.fetchAuthToken(authLoginRequest);
+
+      console.log({ authData });
 
       if (authData?.redirect) {
         set({
@@ -205,26 +216,61 @@ const useAuthStore = create<AuthStore>((set, get) => ({
         loading: true,
       });
 
-      const baseConsoleAddress = await consoleApi.deployBaseConsole(
-        userAddress
+      const txnHash = await consoleApi.deployBaseConsole(userAddress);
+      const safeDeployer = "0x6d70df6f203204a11b1c8bc67b42b751e7171add";
+
+      const provider = new providers.JsonRpcProvider(BASE_RPC);
+
+      const safeDeployerContract = new Contract(
+        safeDeployer,
+        safeDeployerAbi,
+        provider
       );
 
-      await get().fetchEOAConsoles(userAddress);
+      const receipt = await provider.waitForTransaction(txnHash);
 
-      if (baseConsoleAddress) {
-        alert(
-          `Console with address : ${baseConsoleAddress} is deployed on Base`
-        );
-        console.log(
-          `Console with address : ${baseConsoleAddress} is deployed on Base`
+      let deployedConsoleAddress;
+
+      for (let log of receipt.logs) {
+        try {
+          const parsedLog = safeDeployerContract.interface.parseLog(log);
+
+          if (parsedLog.name === "ConsoleAccountDeployed") {
+            const consoleAddress = parsedLog.args.consoleAddress;
+            console.log("consoleAddress", consoleAddress);
+            deployedConsoleAddress = consoleAddress;
+            break;
+          }
+        } catch (e) {
+          console.log(e);
+        }
+      }
+
+      if (!deployedConsoleAddress) {
+        throw new Error(
+          "An unknown error occurred while deploying the console."
         );
       }
 
+      console.log(
+        `Console with address : ${deployedConsoleAddress} is deployed on Base`
+      );
+
+      localStorageService.saveDeployedConsoleAddress(
+        userAddress,
+        deployedConsoleAddress as Address
+      );
+      await get().fetchEOAConsoles(userAddress);
       set({
+        success: true,
+        error: false,
         loading: false,
+        deployedConsoleAddress,
       });
     } catch (err) {
       set({
+        error: true,
+        success: false,
         loading: false,
       });
       console.log(err);
